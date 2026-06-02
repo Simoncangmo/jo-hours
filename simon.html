@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Simon 空间 - Jo Hours · 这里存放着我的人生轨迹">
+  <title>Simon 空间 · Jo Hours</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* ── Tab 导航 ── */
+    .simon-tab-nav {
+      display: flex;
+      gap: 4px;
+      background: rgba(26,10,46,0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 40px;
+      padding: 6px;
+      width: fit-content;
+      margin-bottom: 60px;
+    }
+
+    .tab-btn {
+      padding: 10px 28px;
+      border-radius: 40px;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      font-size: 15px;
+      font-weight: 500;
+      font-family: 'Noto Sans SC', sans-serif;
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-out);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-light);
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--accent-bright), var(--accent-soft));
+      color: var(--bg-deep);
+      font-weight: 700;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── 时间线 ── */
+    .timeline {
+      position: relative;
+      padding-left: 0;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, var(--accent-bright), rgba(184,134,255,0.1));
+      transform: translateX(-50%);
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 1fr 60px 1fr;
+      gap: 0;
+      margin-bottom: 60px;
+      position: relative;
+    }
+
+    .timeline-item:nth-child(odd) .timeline-content {
+      grid-column: 1;
+      grid-row: 1;
+      text-align: right;
+      padding-right: 40px;
+    }
+
+    .timeline-item:nth-child(odd) .timeline-dot {
+      grid-column: 2;
+    }
+
+    .timeline-item:nth-child(odd) .timeline-empty {
+      grid-column: 3;
+    }
+
+    .timeline-item:nth-child(even) .timeline-empty {
+      grid-column: 1;
+    }
+
+    .timeline-item:nth-child(even) .timeline-dot {
+      grid-column: 2;
+    }
+
+    .timeline-item:nth-child(even) .timeline-content {
+      grid-column: 3;
+      grid-row: 1;
+      padding-left: 40px;
+    }
+
+    .timeline-dot {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 8px;
+      position: relative;
+    }
+
+    .timeline-dot-inner {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-bright), var(--accent-soft));
+      border: 3px solid var(--bg-deep);
+      box-shadow: 0 0 0 3px rgba(184,134,255,0.3);
+      animation: nodeGlow 2.5s ease-in-out infinite;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes nodeGlow {
+      0%, 100% { box-shadow: 0 0 0 3px rgba(184,134,255,0.3), 0 0 12px rgba(184,134,255,0.3); }
+      50%       { box-shadow: 0 0 0 6px rgba(184,134,255,0.15), 0 0 20px rgba(184,134,255,0.4); }
+    }
+
+    .timeline-content {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      transition: all var(--duration-mid) var(--ease-out);
+    }
+
+    .timeline-content:hover {
+      border-color: var(--card-hover-border);
+      box-shadow: 0 8px 32px rgba(184,134,255,0.12);
+      transform: translateY(-2px);
+    }
+
+    .timeline-date {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--accent-bright);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .timeline-content h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .timeline-content p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .timeline-img {
+      width: 100%;
+      height: 120px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--bg-mid), var(--bg-light));
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .timeline-img i {
+      font-size: 36px;
+      color: rgba(184,134,255,0.3);
+    }
+
+    /* ── 作品画廊 ── */
+    .works-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .work-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: all var(--duration-mid) var(--ease-out);
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+    }
+
+    .work-card:hover {
+      border-color: var(--card-hover-border);
+      box-shadow: 0 12px 40px rgba(184,134,255,0.2);
+      transform: translateY(-6px);
+    }
+
+    .work-img {
+      height: 220px;
+      background: linear-gradient(135deg, var(--bg-mid), var(--bg-light));
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .work-img i {
+      font-size: 56px;
+      color: rgba(184,134,255,0.25);
+      transition: transform var(--duration-mid) var(--ease-spring);
+    }
+
+    .work-card:hover .work-img i {
+      transform: scale(1.2);
+    }
+
+    .work-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(15,5,24,0.9), transparent);
+      opacity: 0;
+      transition: opacity var(--duration-mid) var(--ease-out);
+      display: flex;
+      align-items: flex-end;
+      padding: 20px;
+    }
+
+    .work-card:hover .work-overlay {
+      opacity: 1;
+    }
+
+    .work-overlay-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-light);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .work-body {
+      padding: 18px 20px;
+    }
+
+    .work-body h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-light);
+    }
+
+    .work-body p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    .work-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .work-type {
+      font-size: 11px;
+      font-family: 'Space Mono', monospace;
+      color: var(--accent-bright);
+      background: rgba(184,134,255,0.1);
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    /* ── 日记列表 ── */
+    .diary-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .diary-month-header {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: var(--accent-bright);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(184,134,255,0.15);
+      margin-top: 20px;
+      margin-bottom: 8px;
+    }
+
+    .diary-item {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-out);
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+      text-decoration: none;
+    }
+
+    .diary-item:hover {
+      border-color: var(--card-hover-border);
+      background: rgba(74,44,122,0.3);
+      transform: translateX(4px);
+    }
+
+    .diary-date-box {
+      flex-shrink: 0;
+      width: 56px;
+      text-align: center;
+    }
+
+    .diary-day {
+      font-family: 'Space Mono', monospace;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--accent-bright);
+      line-height: 1;
+    }
+
+    .diary-weekday {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .diary-body {
+      flex: 1;
+    }
+
+    .diary-body h4 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-light);
+      margin-bottom: 8px;
+    }
+
+    .diary-body p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .diary-mood {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(184,134,255,0.1);
+      border: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    /* 响应式 */
+    @media (max-width: 1023px) {
+      .timeline::before {
+        left: 20px;
+      }
+
+      .timeline-item {
+        grid-template-columns: 40px 1fr;
+        grid-template-rows: auto;
+      }
+
+      .timeline-item:nth-child(odd) .timeline-content,
+      .timeline-item:nth-child(even) .timeline-content {
+        grid-column: 2;
+        grid-row: 1;
+        text-align: left;
+        padding-right: 0;
+        padding-left: 20px;
+      }
+
+      .timeline-item:nth-child(odd) .timeline-dot,
+      .timeline-item:nth-child(even) .timeline-dot {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .timeline-item .timeline-empty {
+        display: none;
+      }
+
+      .works-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .simon-tab-nav {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      .tab-btn {
+        padding: 10px 18px;
+        white-space: nowrap;
+      }
+    }
+
+    @media (max-width: 767px) {
+      .works-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <div class="logo-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+    Jo Hours
+  </a>
+  <ul class="nav-menu">
+    <li><a href="fragments.html">碎片</a></li>
+    <li><a href="simon.html" class="active">Simon 空间</a></li>
+    <li><a href="moments.html">时时刻刻</a></li>
+    <li><a href="flags.html">Flag 墙</a></li>
+  </ul>
+  <a href="mailto:hello@johours.com" class="nav-contact">联系我</a>
+  <button class="hamburger"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="mobile-menu">
+  <a href="fragments.html"><i class="fa-solid fa-puzzle-piece" style="margin-right:10px;color:var(--accent-bright)"></i>碎片</a>
+  <a href="simon.html"><i class="fa-solid fa-star-of-life" style="margin-right:10px;color:var(--accent-bright)"></i>Simon 空间</a>
+  <a href="moments.html"><i class="fa-solid fa-bolt" style="margin-right:10px;color:var(--accent-bright)"></i>时时刻刻</a>
+  <a href="flags.html"><i class="fa-solid fa-flag" style="margin-right:10px;color:var(--accent-bright)"></i>Flag 墙</a>
+  <a href="mailto:hello@johours.com">联系我 →</a>
+</div>
+
+<!-- Banner -->
+<div class="page-banner page-top">
+  <div class="page-banner-inner">
+    <div class="tag reveal" style="margin-bottom:20px;">
+      <i class="fa-solid fa-star-of-life" style="margin-right:6px"></i>Simon 空间
+    </div>
+    <h1 class="reveal">这里存放着<br><span>我的人生轨迹</span></h1>
+    <p class="reveal reveal-delay-1">大事记 · 个人作品 · 日记记录</p>
+  </div>
+</div>
+
+<div class="section tab-container">
+  <!-- Tab 导航 -->
+  <div class="simon-tab-nav tab-nav reveal">
+    <button class="tab-btn active" data-tab="timeline">
+      <i class="fa-solid fa-timeline"></i>
+      大事记
+    </button>
+    <button class="tab-btn" data-tab="works">
+      <i class="fa-solid fa-grid-2"></i>
+      作品展示
+    </button>
+    <button class="tab-btn" data-tab="diary">
+      <i class="fa-regular fa-book-open"></i>
+      日记
+    </button>
+  </div>
+
+  <!-- ══ 大事记 ══ -->
+  <div class="tab-panel active" data-panel="timeline">
+    <div class="timeline">
+
+      <!-- 节点 1 -->
+      <div class="timeline-item reveal">
+        <div class="timeline-content">
+          <span class="timeline-date">2026 · 05</span>
+          <h3>Jo Hours 个人网站正式上线</h3>
+          <p>历时两个月的设计与开发，终于把这个「数字家园」带到了世界面前。感谢一路陪伴的朋友们。</p>
+        </div>
+        <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
+        <div class="timeline-empty"></div>
+      </div>
+
+      <!-- 节点 2 -->
+      <div class="timeline-item reveal">
+        <div class="timeline-empty"></div>
+        <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
+        <div class="timeline-content">
+          <span class="timeline-date">2025 · 09</span>
+          <div class="timeline-img">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <h3>研究生毕业，开启职场新篇章</h3>
+          <p>三年的研究生涯画上句号，带着满满的收获和一颗跃跃欲试的心，走向下一个战场。</p>
+        </div>
+      </div>
+
+      <!-- 节点 3 -->
+      <div class="timeline-item reveal">
+        <div class="timeline-content">
+          <span class="timeline-date">2025 · 01</span>
+          <h3>第一个独立产品上线，获得 500+ 用户</h3>
+          <p>从0到1的过程比想象的更艰难，也更充实。产品不大，但它是「我造的」，这就够了。</p>
+        </div>
+        <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
+        <div class="timeline-empty"></div>
+      </div>
+
+      <!-- 节点 4 -->
+      <div class="timeline-item reveal">
+        <div class="timeline-empty"></div>
+        <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
+        <div class="timeline-content">
+          <span class="timeline-date">2024 · 07</span>
+          <h3>开始每日写作计划</h3>
+          <p>每天至少写 500 字，记录想法、感受和成长。到今天已经连续 420 天，没有断更。</p>
+        </div>
+      </div>
+
+      <!-- 节点 5 -->
+      <div class="timeline-item reveal">
+        <div class="timeline-content">
+          <span class="timeline-date">2024 · 03</span>
+          <h3>参与第一次公开分享，受到意外好评</h3>
+          <p>在社区做了一个关于「个人知识管理」的分享，没想到反响很好。那次经历让我开始相信：输出是最好的学习方式。</p>
+        </div>
+        <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
+        <div class="timeline-empty"></div>
+      </div>
+
+      <!-- 节点 6 -->
+      <div class="timeline-item reveal">
+        <div class="timeline-empty"></div>
+        <div class="timeline-dot"><div class="timeline-dot-inner"></div></div>
+        <div class="timeline-content">
+          <span class="timeline-date">2023 · 09</span>
+          <h3>考上研究生，踏上新阶段</h3>
+          <p>跨专业考研成功，这是我做过最有挑战性的事情之一。过程很痛苦，但回头看，完全值得。</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ 作品展示 ══ -->
+  <div class="tab-panel" data-panel="works">
+    <div class="works-grid">
+
+      <a href="#" class="work-card reveal card-3d" style="text-decoration:none">
+        <div class="work-img" style="background:linear-gradient(135deg,#1A2744,#2A4080);">
+          <i class="fa-solid fa-mobile-screen-button"></i>
+          <div class="work-overlay">
+            <span class="work-overlay-btn"><i class="fa-solid fa-arrow-up-right-from-square"></i> 查看详情</span>
+          </div>
+        </div>
+        <div class="work-body">
+          <h3>DailyDo - 每日任务追踪器</h3>
+          <p>一个专注于「今日最重要三件事」的极简任务 App，帮助用户告别清单焦虑。</p>
+          <div class="work-footer">
+            <span class="work-type">APP</span>
+            <div style="display:flex;gap:8px">
+              <span class="tag">iOS</span>
+              <span class="tag">设计</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <a href="#" class="work-card reveal reveal-delay-1 card-3d" style="text-decoration:none">
+        <div class="work-img" style="background:linear-gradient(135deg,#2A3D1A,#4A6B2A);">
+          <i class="fa-solid fa-chart-bar"></i>
+          <div class="work-overlay">
+            <span class="work-overlay-btn"><i class="fa-solid fa-arrow-up-right-from-square"></i> 查看详情</span>
+          </div>
+        </div>
+        <div class="work-body">
+          <h3>GrowthBoard - 个人成长看板</h3>
+          <p>可视化你的阅读、写作、运动数据，用数据反映真实的成长轨迹。</p>
+          <div class="work-footer">
+            <span class="work-type">Web</span>
+            <div style="display:flex;gap:8px">
+              <span class="tag">Vue</span>
+              <span class="tag">数据可视化</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <a href="#" class="work-card reveal reveal-delay-2 card-3d" style="text-decoration:none">
+        <div class="work-img" style="background:linear-gradient(135deg,#3D1A2A,#6B2A40);">
+          <i class="fa-solid fa-palette"></i>
+          <div class="work-overlay">
+            <span class="work-overlay-btn"><i class="fa-solid fa-arrow-up-right-from-square"></i> 查看详情</span>
+          </div>
+        </div>
+        <div class="work-body">
+          <h3>品牌视觉设计 × 5 个项目</h3>
+          <p>为初创团队提供 logo、视觉规范、营销物料设计，从零构建品牌识别系统。</p>
+          <div class="work-footer">
+            <span class="work-type">设计</span>
+            <div style="display:flex;gap:8px">
+              <span class="tag">品牌</span>
+              <span class="tag">Figma</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <a href="#" class="work-card reveal card-3d" style="text-decoration:none">
+        <div class="work-img" style="background:linear-gradient(135deg,#1A3D3D,#2A6B6B);">
+          <i class="fa-solid fa-robot"></i>
+          <div class="work-overlay">
+            <span class="work-overlay-btn"><i class="fa-solid fa-arrow-up-right-from-square"></i> 查看详情</span>
+          </div>
+        </div>
+        <div class="work-body">
+          <h3>AINote - 智能笔记助手</h3>
+          <p>接入 LLM 的笔记工具，自动摘要、提取关键词、生成思维导图。</p>
+          <div class="work-footer">
+            <span class="work-type">AI 工具</span>
+            <div style="display:flex;gap:8px">
+              <span class="tag">Python</span>
+              <span class="tag">AI</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <a href="#" class="work-card reveal reveal-delay-1 card-3d" style="text-decoration:none">
+        <div class="work-img" style="background:linear-gradient(135deg,#3D3D1A,#6B6B2A);">
+          <i class="fa-solid fa-book"></i>
+          <div class="work-overlay">
+            <span class="work-overlay-btn"><i class="fa-solid fa-arrow-up-right-from-square"></i> 查看详情</span>
+          </div>
+        </div>
+        <div class="work-body">
+          <h3>《个人成长指南》电子书</h3>
+          <p>整理了三年的成长心得，涵盖时间管理、知识体系、效率工具，累计下载 3000+ 次。</p>
+          <div class="work-footer">
+            <span class="work-type">内容</span>
+            <div style="display:flex;gap:8px">
+              <span class="tag">电子书</span>
+              <span class="tag">3000+ 下载</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- 合作咨询 CTA -->
+      <div class="work-card reveal reveal-delay-2" style="background:linear-gradient(135deg,rgba(74,44,122,0.5),rgba(45,27,78,0.7));border-color:rgba(184,134,255,0.3);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;cursor:default;">
+        <i class="fa-solid fa-handshake" style="font-size:40px;color:var(--accent-bright);margin-bottom:20px;"></i>
+        <h3 style="color:var(--text-light);margin-bottom:12px;">有合作想法？</h3>
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">欢迎聊聊设计、产品、技术方向的合作</p>
+        <a href="mailto:hello@johours.com" class="btn btn-primary" style="font-size:14px;padding:12px 24px">
+          <i class="fa-solid fa-paper-plane"></i>
+          合作咨询
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ 日记 ══ -->
+  <div class="tab-panel" data-panel="diary">
+    <div class="diary-list">
+
+      <div class="diary-month-header">2026年5月</div>
+
+      <a href="#" class="diary-item reveal" style="text-decoration:none">
+        <div class="diary-date-box">
+          <div class="diary-day">18</div>
+          <div class="diary-weekday">周日</div>
+        </div>
+        <div class="diary-body">
+          <h4>一个人的周末，出奇地充实</h4>
+          <p>没有任何计划的周末，反而过得最充实。睡到自然醒，读了两小时书，下午去咖啡馆写了篇文章……</p>
+        </div>
+        <div class="diary-mood"><i class="fa-regular fa-face-smile" style="color:var(--accent-bright)"></i></div>
+      </a>
+
+      <a href="#" class="diary-item reveal reveal-delay-1" style="text-decoration:none">
+        <div class="diary-date-box">
+          <div class="diary-day">14</div>
+          <div class="diary-weekday">周三</div>
+        </div>
+        <div class="diary-body">
+          <h4>今天遇到了一个很有意思的人</h4>
+          <p>在社区活动认识了一个做独立游戏的创作者，聊了很久关于「创作动力」的问题……</p>
+        </div>
+        <div class="diary-mood"><i class="fa-regular fa-face-grin-stars" style="color:var(--accent-gold)"></i></div>
+      </a>
+
+      <a href="#" class="diary-item reveal reveal-delay-2" style="text-decoration:none">
+        <div class="diary-date-box">
+          <div class="diary-day">08</div>
+          <div class="diary-weekday">周四</div>
+        </div>
+        <div class="diary-body">
+          <h4>写作 300 天了，说几句想说的话</h4>
+          <p>今天是连续写作第 300 天。没什么特别的仪式感，但翻看最初的日记，有点想笑，也有点感动……</p>
+        </div>
+        <div class="diary-mood"><i class="fa-regular fa-face-smile-wink" style="color:var(--accent-bright)"></i></div>
+      </a>
+
+      <div class="diary-month-header">2026年4月</div>
+
+      <a href="#" class="diary-item reveal" style="text-decoration:none">
+        <div class="diary-date-box">
+          <div class="diary-day">29</div>
+          <div class="diary-weekday">周二</div>
+        </div>
+        <div class="diary-body">
+          <h4>完成了一件拖延了很久的事</h4>
+          <p>终于把那个搁置三个月的项目收尾提交了。拖延症犯起来真的很耗心力……</p>
+        </div>
+        <div class="diary-mood"><i class="fa-regular fa-face-flushed" style="color:var(--accent-soft)"></i></div>
+      </a>
+
+      <a href="#" class="diary-item reveal reveal-delay-1" style="text-decoration:none">
+        <div class="diary-date-box">
+          <div class="diary-day">15</div>
+          <div class="diary-weekday">周二</div>
+        </div>
+        <div class="diary-body">
+          <h4>关于「慢生活」的一些思考</h4>
+          <p>刷到一篇关于慢生活的文章，然后开始质疑自己是不是活得太快了。效率是好事，但……</p>
+        </div>
+        <div class="diary-mood"><i class="fa-regular fa-face-thinking" style="color:var(--accent-soft)"></i></div>
+      </a>
+
+    </div>
+
+    <div style="text-align:center;margin-top:48px;">
+      <button class="btn btn-outline">
+        <i class="fa-solid fa-rotate"></i>
+        查看更多日记
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="logo"><i class="fa-solid fa-hourglass-half" style="color:var(--accent-bright);margin-right:8px"></i>Jo Hours</div>
+      <p>个人成长与创意表达的数字空间，记录碎片思考、重要时刻与灵感瞬间。</p>
+    </div>
+    <div class="footer-col">
+      <h4>页面</h4>
+      <a href="index.html">首页</a>
+      <a href="fragments.html">碎片</a>
+      <a href="moments.html">时时刻刻</a>
+      <a href="flags.html">Flag 墙</a>
+    </div>
+    <div class="footer-col">
+      <h4>联系</h4>
+      <a href="mailto:hello@johours.com">邮件联系</a>
+      <a href="#">微信</a><a href="#">GitHub</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Jo Hours · 用心记录每一刻</p>
+    <div class="footer-social">
+      <a href="#"><i class="fa-brands fa-weibo"></i></a>
+      <a href="#"><i class="fa-brands fa-github"></i></a>
+      <a href="#"><i class="fa-solid fa-envelope"></i></a>
+    </div>
+  </div>
+</footer>
+
+<script src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="时时刻刻 - Jo Hours · 灵光一闪的瞬间，捕捉它">
+  <title>时时刻刻 · Jo Hours</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    .moments-layout {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 60px 24px;
+    }
+
+    /* 筛选栏 */
+    .moments-filter {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+
+    /* 灵感流 */
+    .moments-stream {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .moment-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      transition: all var(--duration-mid) var(--ease-out);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .moment-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--accent-bright), var(--accent-soft));
+      opacity: 0;
+      transition: opacity var(--duration-mid);
+    }
+
+    .moment-card:hover {
+      border-color: var(--card-hover-border);
+      box-shadow: 0 4px 24px rgba(184,134,255,0.12);
+      transform: translateX(4px);
+    }
+
+    .moment-card:hover::before {
+      opacity: 1;
+    }
+
+    /* 特色灵感：引用样式 */
+    .moment-card.type-quote {
+      background: linear-gradient(135deg, rgba(74,44,122,0.4), rgba(45,27,78,0.6));
+      border-color: rgba(184,134,255,0.3);
+    }
+
+    .moment-card.type-quote .moment-text {
+      font-size: 20px;
+      font-weight: 500;
+      line-height: 1.6;
+      color: var(--text-light);
+      font-style: italic;
+    }
+
+    /* 图片灵感 */
+    .moment-card.type-image .moment-img {
+      width: 100%;
+      height: 200px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--bg-mid), var(--bg-light));
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .moment-card.type-image .moment-img i {
+      font-size: 48px;
+      color: rgba(184,134,255,0.25);
+    }
+
+    .moment-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .moment-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .moment-time {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .moment-text {
+      font-size: 16px;
+      line-height: 1.8;
+      color: var(--text-light);
+      margin-bottom: 16px;
+    }
+
+    .moment-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .moment-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .moment-actions {
+      display: flex;
+      gap: 16px;
+    }
+
+    .moment-action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: color var(--duration-fast);
+      font-family: 'Space Mono', monospace;
+      padding: 4px;
+    }
+
+    .moment-action-btn:hover {
+      color: var(--accent-bright);
+    }
+
+    /* 日期分隔线 */
+    .date-separator {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 32px 0 16px;
+    }
+
+    .date-separator span {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      letter-spacing: 0.1em;
+    }
+
+    .date-separator::before,
+    .date-separator::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(184,134,255,0.15);
+    }
+
+    /* CTA */
+    .moments-cta {
+      background: linear-gradient(135deg, rgba(74,44,122,0.4), rgba(45,27,78,0.6));
+      border: 1px solid rgba(184,134,255,0.25);
+      border-radius: var(--radius-xl);
+      padding: 48px;
+      text-align: center;
+      margin-top: 60px;
+    }
+
+    .moments-cta h3 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .moments-cta p {
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <div class="logo-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+    Jo Hours
+  </a>
+  <ul class="nav-menu">
+    <li><a href="fragments.html">碎片</a></li>
+    <li><a href="simon.html">Simon 空间</a></li>
+    <li><a href="moments.html" class="active">时时刻刻</a></li>
+    <li><a href="flags.html">Flag 墙</a></li>
+  </ul>
+  <a href="mailto:hello@johours.com" class="nav-contact">联系我</a>
+  <button class="hamburger"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="mobile-menu">
+  <a href="fragments.html"><i class="fa-solid fa-puzzle-piece" style="margin-right:10px;color:var(--accent-bright)"></i>碎片</a>
+  <a href="simon.html"><i class="fa-solid fa-star-of-life" style="margin-right:10px;color:var(--accent-bright)"></i>Simon 空间</a>
+  <a href="moments.html"><i class="fa-solid fa-bolt" style="margin-right:10px;color:var(--accent-bright)"></i>时时刻刻</a>
+  <a href="flags.html"><i class="fa-solid fa-flag" style="margin-right:10px;color:var(--accent-bright)"></i>Flag 墙</a>
+  <a href="mailto:hello@johours.com">联系我 →</a>
+</div>
+
+<!-- Banner -->
+<div class="page-banner page-top">
+  <div class="page-banner-inner">
+    <div class="tag reveal" style="margin-bottom:20px;">
+      <i class="fa-solid fa-bolt" style="margin-right:6px"></i>时时刻刻
+    </div>
+    <h1 class="reveal">灵光一闪的瞬间<br><span>捕捉它</span></h1>
+    <p class="reveal reveal-delay-1">即时灵感 · 短思考 · 观察与感受</p>
+  </div>
+</div>
+
+<div class="moments-layout">
+  <!-- 筛选 -->
+  <div class="moments-filter filter-tags" data-target=".moments-stream">
+    <span style="font-size:13px;color:var(--text-muted);font-family:'Space Mono',monospace;margin-right:4px">筛选：</span>
+    <span class="tag active" data-filter="all">全部</span>
+    <span class="tag" data-filter="think">思考</span>
+    <span class="tag" data-filter="life">生活</span>
+    <span class="tag" data-filter="quote">引用</span>
+    <span class="tag" data-filter="read">读书</span>
+  </div>
+
+  <!-- 灵感流 -->
+  <div class="moments-stream">
+
+    <div class="date-separator reveal"><span>TODAY · 2026.06.02</span></div>
+
+    <!-- 今日灵感1 -->
+    <div class="moment-card reveal" data-category="think">
+      <div class="moment-header">
+        <div class="moment-meta">
+          <i class="fa-solid fa-bolt" style="color:var(--accent-bright);font-size:14px"></i>
+          <span class="moment-time">09:41</span>
+        </div>
+      </div>
+      <p class="moment-text">专注本身就是一种稀缺资源。在注意力被无限切割的今天，能连续做一件事两小时，已经是一种竞争力。不要轻易打断自己的心流状态。</p>
+      <div class="moment-footer">
+        <div class="moment-tags"><span class="tag">思考</span><span class="tag">效率</span></div>
+        <div class="moment-actions">
+          <button class="moment-action-btn"><i class="fa-regular fa-heart"></i> 24</button>
+          <button class="moment-action-btn"><i class="fa-regular fa-bookmark"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 引用类 -->
+    <div class="moment-card type-quote reveal" data-category="quote">
+      <div class="moment-header">
+        <div class="moment-meta">
+          <i class="fa-solid fa-quote-left" style="color:var(--accent-bright);font-size:14px"></i>
+          <span class="moment-time">07:15</span>
+        </div>
+      </div>
+      <p class="moment-text">「真正的成长，是当你回头看自己六个月前的想法，会觉得那时的自己太幼稚——但这种感觉让你感到欣慰而非羞耻。」</p>
+      <div class="moment-footer">
+        <div class="moment-tags"><span class="tag">引用</span><span class="tag">成长</span></div>
+        <div class="moment-actions">
+          <button class="moment-action-btn"><i class="fa-regular fa-heart"></i> 67</button>
+          <button class="moment-action-btn"><i class="fa-regular fa-bookmark"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="date-separator reveal"><span>YESTERDAY · 2026.06.01</span></div>
+
+    <!-- 昨日1 -->
+    <div class="moment-card reveal" data-category="life">
+      <div class="moment-header">
+        <div class="moment-meta">
+          <i class="fa-solid fa-bolt" style="color:var(--accent-bright);font-size:14px"></i>
+          <span class="moment-time">22:30</span>
+        </div>
+      </div>
+      <p class="moment-text">今天刻意不看手机两小时，结果发现大脑开始主动「思考」，不是刷内容，而是真正的想东西。那种感觉好久没有了，有点陌生，又很舒服。</p>
+      <div class="moment-footer">
+        <div class="moment-tags"><span class="tag">生活</span><span class="tag">实验</span></div>
+        <div class="moment-actions">
+          <button class="moment-action-btn"><i class="fa-regular fa-heart"></i> 41</button>
+          <button class="moment-action-btn"><i class="fa-regular fa-bookmark"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 图片类 -->
+    <div class="moment-card type-image reveal" data-category="life">
+      <div class="moment-header">
+        <div class="moment-meta">
+          <i class="fa-solid fa-camera" style="color:var(--accent-bright);font-size:14px"></i>
+          <span class="moment-time">18:20</span>
+        </div>
+      </div>
+      <div class="moment-img">
+        <i class="fa-solid fa-cloud-sun"></i>
+      </div>
+      <p class="moment-text">傍晚的天空，橙粉色的渐变。停下来看了三分钟，没有拍照，但记住了。</p>
+      <div class="moment-footer">
+        <div class="moment-tags"><span class="tag">生活</span><span class="tag">感受</span></div>
+        <div class="moment-actions">
+          <button class="moment-action-btn"><i class="fa-regular fa-heart"></i> 33</button>
+          <button class="moment-action-btn"><i class="fa-regular fa-bookmark"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 读书类 -->
+    <div class="moment-card reveal" data-category="read">
+      <div class="moment-header">
+        <div class="moment-meta">
+          <i class="fa-solid fa-book-open" style="color:var(--accent-bright);font-size:14px"></i>
+          <span class="moment-time">10:05</span>
+        </div>
+      </div>
+      <p class="moment-text">读《清醒思考的艺术》，里面提到「社会认同偏误」——我们倾向于认为，很多人做的事情就是正确的。但想想大多数人刷短视频的时间……反向操作也许是策略。</p>
+      <div class="moment-footer">
+        <div class="moment-tags"><span class="tag">读书</span><span class="tag">认知</span></div>
+        <div class="moment-actions">
+          <button class="moment-action-btn"><i class="fa-regular fa-heart"></i> 52</button>
+          <button class="moment-action-btn"><i class="fa-regular fa-bookmark"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="date-separator reveal"><span>2026.05.31</span></div>
+
+    <div class="moment-card reveal" data-category="think">
+      <div class="moment-header">
+        <div class="moment-meta">
+          <i class="fa-solid fa-bolt" style="color:var(--accent-bright);font-size:14px"></i>
+          <span class="moment-time">15:48</span>
+        </div>
+      </div>
+      <p class="moment-text">「写作」最大的副作用：开始无法容忍自己的模糊思维。写下来才发现，很多「想法」其实只是情绪，没有逻辑支撑。但这正是写作的价值——强迫自己真正想清楚。</p>
+      <div class="moment-footer">
+        <div class="moment-tags"><span class="tag">思考</span><span class="tag">写作</span></div>
+        <div class="moment-actions">
+          <button class="moment-action-btn"><i class="fa-regular fa-heart"></i> 89</button>
+          <button class="moment-action-btn"><i class="fa-regular fa-bookmark"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 加载更多 -->
+    <div style="text-align:center;padding:24px 0;">
+      <button class="btn btn-outline reveal">
+        <i class="fa-solid fa-rotate"></i>
+        更多灵感
+      </button>
+    </div>
+
+  </div>
+
+  <!-- CTA -->
+  <div class="moments-cta reveal">
+    <i class="fa-solid fa-comments" style="font-size:40px;color:var(--accent-bright);margin-bottom:20px;display:block"></i>
+    <h3>一起交流灵感</h3>
+    <p>如果哪个想法触动了你，欢迎留言或直接联系我</p>
+    <a href="mailto:hello@johours.com" class="btn btn-primary">
+      <i class="fa-solid fa-paper-plane"></i>
+      一起交流灵感
+    </a>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="logo"><i class="fa-solid fa-hourglass-half" style="color:var(--accent-bright);margin-right:8px"></i>Jo Hours</div>
+      <p>个人成长与创意表达的数字空间，记录碎片思考、重要时刻与灵感瞬间。</p>
+    </div>
+    <div class="footer-col">
+      <h4>页面</h4>
+      <a href="index.html">首页</a>
+      <a href="fragments.html">碎片</a>
+      <a href="simon.html">Simon 空间</a>
+      <a href="flags.html">Flag 墙</a>
+    </div>
+    <div class="footer-col">
+      <h4>联系</h4>
+      <a href="mailto:hello@johours.com">邮件联系</a>
+      <a href="#">微信</a><a href="#">GitHub</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Jo Hours · 用心记录每一刻</p>
+    <div class="footer-social">
+      <a href="#"><i class="fa-brands fa-weibo"></i></a>
+      <a href="#"><i class="fa-brands fa-github"></i></a>
+      <a href="#"><i class="fa-solid fa-envelope"></i></a>
+    </div>
+  </div>
+</footer>
+
+<script src="main.js"></script>
+</body>
+</html>

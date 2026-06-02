@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="碎片 - Jo Hours · 生活中的每一个片段，都值得被记录">
+  <title>碎片 · Jo Hours</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* ── 碎片页专属样式 ── */
+    .frag-filter {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+
+    .frag-filter-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+      margin-right: 4px;
+    }
+
+    .frag-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--card-gap);
+    }
+
+    .frag-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all var(--duration-mid) var(--ease-out);
+      will-change: transform;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .frag-card:hover {
+      border-color: var(--card-hover-border);
+      box-shadow: 0 12px 40px rgba(184,134,255,0.15);
+      transform: translateY(-6px);
+    }
+
+    .frag-card-img {
+      height: 180px;
+      background: linear-gradient(135deg, var(--bg-mid), var(--bg-light));
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .frag-card-img i {
+      font-size: 48px;
+      color: rgba(184,134,255,0.25);
+      transition: transform var(--duration-mid) var(--ease-spring);
+    }
+
+    .frag-card:hover .frag-card-img i {
+      transform: scale(1.15);
+    }
+
+    .frag-card-body {
+      padding: 20px 22px 22px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .frag-card-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .frag-card h3 {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--text-light);
+      margin-bottom: 10px;
+      transition: color var(--duration-fast);
+    }
+
+    .frag-card:hover h3 {
+      color: var(--accent-bright);
+    }
+
+    .frag-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 16px;
+      flex: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .frag-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+      padding-top: 14px;
+      border-top: 1px solid rgba(184,134,255,0.1);
+    }
+
+    /* 图配文卡片：大横图 */
+    .frag-card.type-gallery {
+      grid-column: span 2;
+      flex-direction: row;
+    }
+
+    .frag-card.type-gallery .frag-card-img {
+      width: 280px;
+      flex-shrink: 0;
+      height: auto;
+    }
+
+    /* 特色大卡 */
+    .frag-card.featured {
+      background: linear-gradient(135deg, rgba(74,44,122,0.5), rgba(45,27,78,0.7));
+      border-color: rgba(184,134,255,0.3);
+    }
+
+    /* 加载更多 */
+    .load-more {
+      text-align: center;
+      margin-top: 60px;
+    }
+
+    /* 侧边栏 */
+    .frag-layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 40px;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 60px 48px;
+    }
+
+    .frag-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .sidebar-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+    }
+
+    .sidebar-card h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent-bright);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .sidebar-tag-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .sidebar-archive a {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(184,134,255,0.08);
+      font-size: 14px;
+      color: var(--text-muted);
+      transition: color var(--duration-fast);
+    }
+
+    .sidebar-archive a:last-child {
+      border-bottom: none;
+    }
+
+    .sidebar-archive a:hover {
+      color: var(--text-light);
+    }
+
+    .sidebar-archive .count {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--accent-bright);
+    }
+
+    @media (max-width: 1023px) {
+      .frag-layout {
+        grid-template-columns: 1fr;
+        padding: 40px 24px;
+      }
+
+      .frag-sidebar {
+        order: -1;
+      }
+
+      .frag-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .frag-card.type-gallery {
+        grid-column: span 1;
+        flex-direction: column;
+      }
+
+      .frag-card.type-gallery .frag-card-img {
+        width: 100%;
+        height: 180px;
+      }
+    }
+
+    @media (min-width: 768px) and (max-width: 1023px) {
+      .frag-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <div class="logo-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+    Jo Hours
+  </a>
+  <ul class="nav-menu">
+    <li><a href="fragments.html" class="active">碎片</a></li>
+    <li><a href="simon.html">Simon 空间</a></li>
+    <li><a href="moments.html">时时刻刻</a></li>
+    <li><a href="flags.html">Flag 墙</a></li>
+  </ul>
+  <a href="mailto:hello@johours.com" class="nav-contact">联系我</a>
+  <button class="hamburger"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="mobile-menu">
+  <a href="fragments.html"><i class="fa-solid fa-puzzle-piece" style="margin-right:10px;color:var(--accent-bright)"></i>碎片</a>
+  <a href="simon.html"><i class="fa-solid fa-star-of-life" style="margin-right:10px;color:var(--accent-bright)"></i>Simon 空间</a>
+  <a href="moments.html"><i class="fa-solid fa-bolt" style="margin-right:10px;color:var(--accent-bright)"></i>时时刻刻</a>
+  <a href="flags.html"><i class="fa-solid fa-flag" style="margin-right:10px;color:var(--accent-bright)"></i>Flag 墙</a>
+  <a href="mailto:hello@johours.com">联系我 →</a>
+</div>
+
+<!-- Banner -->
+<div class="page-banner page-top">
+  <div class="page-banner-inner">
+    <div class="tag reveal" style="margin-bottom:20px;">
+      <i class="fa-solid fa-puzzle-piece" style="margin-right:6px"></i>碎片
+    </div>
+    <h1 class="reveal">生活中的每一个片段<br><span>都值得被记录</span></h1>
+    <p class="reveal reveal-delay-1">文章 · 图配文 · 随笔思考 · 观察与感受</p>
+  </div>
+</div>
+
+<div class="frag-layout">
+  <!-- 主内容 -->
+  <main>
+    <!-- 筛选栏 -->
+    <div class="frag-filter filter-tags" data-target=".frag-grid">
+      <span class="frag-filter-label">筛选：</span>
+      <span class="tag active" data-filter="all">全部</span>
+      <span class="tag" data-filter="growth">成长</span>
+      <span class="tag" data-filter="tech">技术</span>
+      <span class="tag" data-filter="life">生活</span>
+      <span class="tag" data-filter="think">思考</span>
+      <span class="tag" data-filter="gallery">图配文</span>
+    </div>
+
+    <!-- 文章网格 -->
+    <div class="frag-grid">
+
+      <!-- 精选大文章 -->
+      <a href="#" class="frag-card featured card-3d reveal" data-category="growth" style="text-decoration:none">
+        <div class="frag-card-img" style="background:linear-gradient(135deg,#2D1B4E,#5A3090);">
+          <i class="fa-solid fa-seedling" style="font-size:64px;color:rgba(184,134,255,0.35)"></i>
+        </div>
+        <div class="frag-card-body">
+          <div class="frag-card-tags">
+            <span class="tag">成长</span>
+            <span class="tag" style="background:rgba(255,215,0,0.1);color:var(--accent-gold);border-color:rgba(255,215,0,0.3)">精选</span>
+          </div>
+          <h3>关于持续记录这件事，我想聊聊我的理解</h3>
+          <p>三年前开始写作，起初觉得记录是一件很「刻意」的事。直到某天翻出一年前的日记，才发现文字的力量早已悄悄改变了我的思维方式……</p>
+          <div class="frag-card-footer">
+            <span><i class="fa-regular fa-calendar" style="margin-right:5px"></i>2026.05.18</span>
+            <span><i class="fa-regular fa-eye" style="margin-right:5px"></i>1.2k</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 普通文章 2 -->
+      <a href="#" class="frag-card card-3d reveal reveal-delay-1" data-category="think" style="text-decoration:none">
+        <div class="frag-card-img" style="background:linear-gradient(135deg,#1A2744,#2A3F6E);">
+          <i class="fa-solid fa-lightbulb"></i>
+        </div>
+        <div class="frag-card-body">
+          <div class="frag-card-tags"><span class="tag">思考</span></div>
+          <h3>「专注」这件事，比想象的更难，也更值得</h3>
+          <p>在注意力被无限切割的今天，能连续做一件事两小时，已经是一种竞争力……</p>
+          <div class="frag-card-footer">
+            <span><i class="fa-regular fa-calendar" style="margin-right:5px"></i>2026.05.10</span>
+            <span><i class="fa-regular fa-eye" style="margin-right:5px"></i>856</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 图配文横卡 -->
+      <a href="#" class="frag-card type-gallery reveal" data-category="gallery" style="text-decoration:none">
+        <div class="frag-card-img" style="background:linear-gradient(135deg,#2A4A2A,#3D6B3D);">
+          <i class="fa-solid fa-camera-retro" style="font-size:40px;color:rgba(100,220,100,0.3)"></i>
+        </div>
+        <div class="frag-card-body">
+          <div class="frag-card-tags">
+            <span class="tag">图配文</span>
+            <span class="tag">生活</span>
+          </div>
+          <h3>五月的傍晚，我拍下了这些</h3>
+          <p>周末下午偷得半日闲，带着相机在城市里随机漫步。光线的角度、人群的背影、橱窗的倒影……每一帧都值得被凝视。</p>
+          <div class="frag-card-footer">
+            <span><i class="fa-regular fa-calendar" style="margin-right:5px"></i>2026.05.05</span>
+            <span><i class="fa-solid fa-images" style="margin-right:5px"></i>12 张</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 技术文章 -->
+      <a href="#" class="frag-card card-3d reveal reveal-delay-1" data-category="tech" style="text-decoration:none">
+        <div class="frag-card-img" style="background:linear-gradient(135deg,#0D2137,#1A3D60);">
+          <i class="fa-solid fa-terminal"></i>
+        </div>
+        <div class="frag-card-body">
+          <div class="frag-card-tags"><span class="tag">技术</span></div>
+          <h3>我如何用 Notion 搭建个人知识系统</h3>
+          <p>从混乱记录到结构化知识图谱，这套系统帮我节省了大量检索时间……</p>
+          <div class="frag-card-footer">
+            <span><i class="fa-regular fa-calendar" style="margin-right:5px"></i>2026.04.28</span>
+            <span><i class="fa-regular fa-eye" style="margin-right:5px"></i>2.1k</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 生活文章 -->
+      <a href="#" class="frag-card card-3d reveal reveal-delay-2" data-category="life" style="text-decoration:none">
+        <div class="frag-card-img" style="background:linear-gradient(135deg,#3D2A1A,#6B4A2A);">
+          <i class="fa-solid fa-mug-hot"></i>
+        </div>
+        <div class="frag-card-body">
+          <div class="frag-card-tags"><span class="tag">生活</span></div>
+          <h3>早起一年后，我想告诉你的几件事</h3>
+          <p>早起不是目的，而是留给自己的一段「无人打扰时间」。这一年里，它悄悄改变了我……</p>
+          <div class="frag-card-footer">
+            <span><i class="fa-regular fa-calendar" style="margin-right:5px"></i>2026.04.15</span>
+            <span><i class="fa-regular fa-eye" style="margin-right:5px"></i>3.4k</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 思考文章 2 -->
+      <a href="#" class="frag-card card-3d reveal" data-category="think" style="text-decoration:none">
+        <div class="frag-card-img" style="background:linear-gradient(135deg,#2A1A3D,#4A2C7A);">
+          <i class="fa-solid fa-brain"></i>
+        </div>
+        <div class="frag-card-body">
+          <div class="frag-card-tags"><span class="tag">思考</span></div>
+          <h3>输入太多，输出太少——这是大多数人的困境</h3>
+          <p>我们每天消耗大量内容，但真正内化成自己认知的又有多少？输出是最好的检验……</p>
+          <div class="frag-card-footer">
+            <span><i class="fa-regular fa-calendar" style="margin-right:5px"></i>2026.04.05</span>
+            <span><i class="fa-regular fa-eye" style="margin-right:5px"></i>987</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 成长文章 2 -->
+      <a href="#" class="frag-card card-3d reveal reveal-delay-1" data-category="growth" style="text-decoration:none">
+        <div class="frag-card-img" style="background:linear-gradient(135deg,#1D3A1D,#2E5B2E);">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <div class="frag-card-body">
+          <div class="frag-card-tags"><span class="tag">成长</span></div>
+          <h3>25岁以后，我开始认真对待「边界感」</h3>
+          <p>不是变冷漠，而是更清楚地知道自己的能量在哪里、应该流向哪里……</p>
+          <div class="frag-card-footer">
+            <span><i class="fa-regular fa-calendar" style="margin-right:5px"></i>2026.03.20</span>
+            <span><i class="fa-regular fa-eye" style="margin-right:5px"></i>1.8k</span>
+          </div>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- 加载更多 -->
+    <div class="load-more reveal">
+      <button class="btn btn-outline">
+        <i class="fa-solid fa-rotate"></i>
+        加载更多
+      </button>
+    </div>
+
+    <!-- 联系引导 -->
+    <div style="margin-top:80px;text-align:center;padding:48px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-xl);" class="reveal">
+      <p style="font-size:16px;color:var(--text-muted);margin-bottom:20px;">读到这里，也许我们可以聊聊？</p>
+      <a href="mailto:hello@johours.com" class="btn btn-primary">
+        <i class="fa-regular fa-envelope"></i>
+        联系我
+      </a>
+    </div>
+  </main>
+
+  <!-- 侧边栏 -->
+  <aside class="frag-sidebar">
+    <div class="sidebar-card reveal">
+      <h4>标签云</h4>
+      <div class="sidebar-tag-cloud">
+        <a href="#" class="tag">成长</a>
+        <a href="#" class="tag">思考</a>
+        <a href="#" class="tag">技术</a>
+        <a href="#" class="tag">生活</a>
+        <a href="#" class="tag">图配文</a>
+        <a href="#" class="tag">读书</a>
+        <a href="#" class="tag">效率</a>
+        <a href="#" class="tag">创作</a>
+        <a href="#" class="tag">独立</a>
+      </div>
+    </div>
+
+    <div class="sidebar-card reveal reveal-delay-1">
+      <h4>归档</h4>
+      <div class="sidebar-archive">
+        <a href="#">2026年5月 <span class="count">8</span></a>
+        <a href="#">2026年4月 <span class="count">12</span></a>
+        <a href="#">2026年3月 <span class="count">9</span></a>
+        <a href="#">2026年2月 <span class="count">6</span></a>
+        <a href="#">2026年1月 <span class="count">7</span></a>
+      </div>
+    </div>
+
+    <div class="sidebar-card reveal reveal-delay-2" style="background:linear-gradient(135deg,rgba(74,44,122,0.4),rgba(45,27,78,0.6));">
+      <h4 style="color:var(--accent-gold)">近期活跃</h4>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">最近在思考关于「输出驱动成长」的话题，欢迎交流。</p>
+      <a href="mailto:hello@johours.com" class="btn btn-outline" style="width:100%;justify-content:center;padding:10px">
+        一起聊聊
+      </a>
+    </div>
+  </aside>
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="logo"><i class="fa-solid fa-hourglass-half" style="color:var(--accent-bright);margin-right:8px"></i>Jo Hours</div>
+      <p>个人成长与创意表达的数字空间，记录碎片思考、重要时刻与灵感瞬间。</p>
+    </div>
+    <div class="footer-col">
+      <h4>页面</h4>
+      <a href="index.html">首页</a>
+      <a href="simon.html">Simon 空间</a>
+      <a href="moments.html">时时刻刻</a>
+      <a href="flags.html">Flag 墙</a>
+    </div>
+    <div class="footer-col">
+      <h4>联系</h4>
+      <a href="mailto:hello@johours.com">邮件联系</a>
+      <a href="#">微信</a><a href="#">GitHub</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Jo Hours · 用心记录每一刻</p>
+    <div class="footer-social">
+      <a href="#"><i class="fa-brands fa-weibo"></i></a>
+      <a href="#"><i class="fa-brands fa-github"></i></a>
+      <a href="#"><i class="fa-solid fa-envelope"></i></a>
+    </div>
+  </div>
+</footer>
+
+<script src="main.js"></script>
+</body>
+</html>

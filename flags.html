@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Flag 墙 - Jo Hours · 阶段性目标及完成情况，欢迎监督">
+  <title>Flag 墙 · Jo Hours</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* ── Flag 筛选 Tab ── */
+    .flag-filter-nav {
+      display: flex;
+      gap: 4px;
+      background: rgba(26,10,46,0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 40px;
+      padding: 6px;
+      width: fit-content;
+      margin-bottom: 48px;
+      overflow-x: auto;
+    }
+
+    .flag-filter-btn {
+      padding: 10px 22px;
+      border-radius: 40px;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'Noto Sans SC', sans-serif;
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-out);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .flag-filter-btn:hover {
+      color: var(--text-light);
+    }
+
+    .flag-filter-btn.active {
+      background: linear-gradient(135deg, var(--accent-bright), var(--accent-soft));
+      color: var(--bg-deep);
+      font-weight: 700;
+    }
+
+    /* ── Flag 网格 ── */
+    .flags-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 80px;
+    }
+
+    /* ── Flag 卡片 ── */
+    .flag-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      position: relative;
+      transition: all var(--duration-mid) var(--ease-out);
+      overflow: hidden;
+    }
+
+    .flag-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-bright), var(--accent-soft));
+      opacity: 0;
+      transition: opacity var(--duration-mid);
+    }
+
+    .flag-card:hover {
+      border-color: var(--card-hover-border);
+      box-shadow: 0 12px 40px rgba(184,134,255,0.15);
+      transform: translateY(-4px);
+    }
+
+    .flag-card:hover::before {
+      opacity: 1;
+    }
+
+    /* 进行中卡片 */
+    .flag-card.ongoing {
+      border-top-color: rgba(184,134,255,0.4);
+    }
+
+    /* 已达成卡片 */
+    .flag-card.achieved {
+      background: linear-gradient(135deg, rgba(20,50,30,0.5), rgba(15,40,25,0.7));
+      border-color: rgba(100,200,100,0.25);
+    }
+
+    .flag-card.achieved::before {
+      background: linear-gradient(90deg, #4CAF50, #8BC34A);
+      opacity: 1;
+    }
+
+    /* 已搁置卡片 */
+    .flag-card.paused {
+      opacity: 0.65;
+    }
+
+    /* 成功盖章 */
+    .success-stamp {
+      position: absolute;
+      right: 16px;
+      top: 16px;
+      width: 72px;
+      height: 72px;
+      border: 3px solid rgba(100,200,100,0.6);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: rotate(-15deg);
+      background: rgba(76,175,80,0.08);
+    }
+
+    .success-stamp span {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(100,200,100,0.8);
+      letter-spacing: 0.05em;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    /* 搁置印章 */
+    .paused-stamp {
+      position: absolute;
+      right: 16px;
+      top: 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(184,134,255,0.4);
+      border: 2px solid rgba(184,134,255,0.3);
+      padding: 4px 8px;
+      border-radius: 4px;
+      transform: rotate(5deg);
+    }
+
+    /* 卡片头部 */
+    .flag-card-header {
+      margin-bottom: 16px;
+    }
+
+    .flag-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+
+    .badge-ongoing {
+      background: rgba(184,134,255,0.15);
+      color: var(--accent-bright);
+      border: 1px solid rgba(184,134,255,0.3);
+    }
+
+    .badge-achieved {
+      background: rgba(76,175,80,0.15);
+      color: #81C784;
+      border: 1px solid rgba(76,175,80,0.3);
+    }
+
+    .badge-paused {
+      background: rgba(120,120,120,0.15);
+      color: rgba(200,200,200,0.6);
+      border: 1px solid rgba(120,120,120,0.2);
+    }
+
+    .flag-card-header h3 {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--text-light);
+      padding-right: 60px;
+    }
+
+    .flag-card.achieved .flag-card-header h3 {
+      padding-right: 80px;
+    }
+
+    /* 进度条 */
+    .flag-progress {
+      margin: 16px 0;
+    }
+
+    .flag-progress-bar {
+      height: 8px;
+      background: rgba(184,134,255,0.1);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .flag-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-bright), var(--accent-soft));
+      border-radius: 8px;
+      transition: width 1.5s var(--ease-out);
+    }
+
+    .flag-progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* 时间信息 */
+    .flag-time-info {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 倒计时 */
+    .flag-countdown {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--accent-gold);
+      background: rgba(255,215,0,0.08);
+      border: 1px solid rgba(255,215,0,0.2);
+      border-radius: 20px;
+      padding: 3px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+
+    /* 达成感言 */
+    .flag-review {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      font-style: italic;
+      border-left: 2px solid rgba(100,200,100,0.4);
+      padding-left: 12px;
+      margin: 12px 0;
+    }
+
+    /* 互动按钮区 */
+    .flag-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
+      border-top: 1px solid rgba(184,134,255,0.1);
+      margin-top: 16px;
+    }
+
+    .flag-interact {
+      display: flex;
+      gap: 8px;
+    }
+
+    .flag-btn {
+      background: rgba(184,134,255,0.08);
+      border: 1px solid rgba(184,134,255,0.2);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Noto Sans SC', sans-serif;
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .flag-btn:hover {
+      background: rgba(184,134,255,0.2);
+      border-color: rgba(184,134,255,0.5);
+      color: var(--text-light);
+      transform: scale(1.05);
+    }
+
+    .flag-btn.bumped {
+      animation: bumpScale var(--duration-mid) var(--ease-spring);
+    }
+
+    @keyframes bumpScale {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.25); }
+      100% { transform: scale(1); }
+    }
+
+    .flag-btn .count {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--accent-bright);
+      font-weight: 700;
+    }
+
+    .flag-btn.urge:hover {
+      border-color: rgba(255,100,100,0.5);
+      color: #FF8080;
+    }
+
+    .flag-btn.respect:hover {
+      border-color: rgba(100,200,255,0.5);
+      color: #80D8FF;
+    }
+
+    /* ── 留言区 ── */
+    .message-section {
+      background: linear-gradient(135deg, rgba(26,10,46,0.8), rgba(45,27,78,0.4));
+      border: 1px solid rgba(184,134,255,0.2);
+      border-radius: var(--radius-xl);
+      padding: 48px;
+      margin-top: 20px;
+    }
+
+    .message-section h2 {
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .message-section > p {
+      color: var(--text-muted);
+      margin-bottom: 36px;
+      font-size: 15px;
+    }
+
+    /* 快捷语 */
+    .quick-phrases {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .quick-phrase {
+      background: rgba(184,134,255,0.08);
+      border: 1px solid rgba(184,134,255,0.25);
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: 'Noto Sans SC', sans-serif;
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .quick-phrase:hover {
+      background: rgba(184,134,255,0.18);
+      color: var(--text-light);
+      border-color: rgba(184,134,255,0.5);
+    }
+
+    /* 表单 */
+    .msg-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .form-group label span {
+      color: #FF8080;
+      margin-left: 2px;
+    }
+
+    .form-control {
+      background: rgba(26,10,46,0.6);
+      border: 1px solid rgba(184,134,255,0.2);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 15px;
+      color: var(--text-light);
+      font-family: 'Noto Sans SC', sans-serif;
+      transition: border-color var(--duration-fast);
+      outline: none;
+      width: 100%;
+    }
+
+    .form-control:focus {
+      border-color: var(--accent-bright);
+      background: rgba(26,10,46,0.8);
+    }
+
+    .form-control::placeholder {
+      color: rgba(245,245,245,0.3);
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* 成功消息 */
+    .form-success {
+      display: none;
+      background: rgba(76,175,80,0.1);
+      border: 1px solid rgba(76,175,80,0.3);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      color: #81C784;
+      font-size: 14px;
+      margin-top: 16px;
+    }
+
+    .form-upsell {
+      display: none;
+      background: rgba(184,134,255,0.08);
+      border: 1px solid rgba(184,134,255,0.2);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-top: 16px;
+    }
+
+    .form-upsell p {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      line-height: 1.7;
+    }
+
+    .form-upsell .upsell-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 1023px) {
+      .flags-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .msg-form {
+        grid-template-columns: 1fr;
+      }
+
+      .form-group.full {
+        grid-column: 1;
+      }
+
+      .message-section {
+        padding: 32px 24px;
+      }
+    }
+
+    @media (max-width: 767px) {
+      .flags-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .flag-filter-nav {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <div class="logo-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+    Jo Hours
+  </a>
+  <ul class="nav-menu">
+    <li><a href="fragments.html">碎片</a></li>
+    <li><a href="simon.html">Simon 空间</a></li>
+    <li><a href="moments.html">时时刻刻</a></li>
+    <li><a href="flags.html" class="active">Flag 墙</a></li>
+  </ul>
+  <a href="mailto:hello@johours.com" class="nav-contact">联系我</a>
+  <button class="hamburger"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="mobile-menu">
+  <a href="fragments.html"><i class="fa-solid fa-puzzle-piece" style="margin-right:10px;color:var(--accent-bright)"></i>碎片</a>
+  <a href="simon.html"><i class="fa-solid fa-star-of-life" style="margin-right:10px;color:var(--accent-bright)"></i>Simon 空间</a>
+  <a href="moments.html"><i class="fa-solid fa-bolt" style="margin-right:10px;color:var(--accent-bright)"></i>时时刻刻</a>
+  <a href="flags.html"><i class="fa-solid fa-flag" style="margin-right:10px;color:var(--accent-bright)"></i>Flag 墙</a>
+  <a href="mailto:hello@johours.com">联系我 →</a>
+</div>
+
+<!-- Banner -->
+<div class="page-banner page-top">
+  <div class="page-banner-inner">
+    <div class="tag reveal" style="margin-bottom:20px;">
+      <i class="fa-solid fa-flag" style="margin-right:6px"></i>Flag 墙
+    </div>
+    <h1 class="reveal">公开自律<br><span>欢迎监督</span></h1>
+    <p class="reveal reveal-delay-1">阶段性目标 · 进度追踪 · 访客互动</p>
+  </div>
+</div>
+
+<div class="section">
+  <!-- 筛选 Tab -->
+  <div class="flag-filter-nav reveal">
+    <button class="flag-filter-btn active" data-filter="all">
+      <i class="fa-solid fa-border-all"></i> 全部
+    </button>
+    <button class="flag-filter-btn" data-filter="ongoing">
+      <i class="fa-solid fa-person-running"></i> 进行中
+    </button>
+    <button class="flag-filter-btn" data-filter="achieved">
+      <i class="fa-solid fa-trophy"></i> 已达成
+    </button>
+    <button class="flag-filter-btn" data-filter="paused">
+      <i class="fa-solid fa-moon"></i> 已搁置
+    </button>
+  </div>
+
+  <!-- ── Flag 卡片网格 ── -->
+  <div class="flags-grid" id="flags-container">
+
+    <!-- 进行中1：读书 -->
+    <div class="flag-card ongoing reveal" data-status="ongoing">
+      <div class="flag-card-header">
+        <span class="flag-status-badge badge-ongoing"><i class="fa-solid fa-person-running"></i> 进行中</span>
+        <div class="flag-countdown"><i class="fa-regular fa-clock"></i> 还有 127 天</div>
+        <h3>今年读完 12 本书</h3>
+      </div>
+      <div class="flag-time-info">
+        <i class="fa-regular fa-calendar-check"></i>
+        <span>开始于 2026.01.01 · 截止 2026.12.31</span>
+      </div>
+      <div class="flag-progress">
+        <div class="flag-progress-bar">
+          <div class="flag-progress-fill" style="width:58%"></div>
+        </div>
+        <div class="flag-progress-meta">
+          <span>7 / 12 本</span>
+          <span>58%</span>
+        </div>
+      </div>
+      <div class="flag-card-footer">
+        <div class="flag-interact">
+          <button class="flag-btn urge" data-type="urge">
+            <i class="fa-solid fa-bolt"></i>
+            催更监督
+            <span class="count">14</span>
+          </button>
+          <button class="flag-btn respect" data-type="respect">
+            <i class="fa-solid fa-hand-peace"></i>
+            瑞思拜
+            <span class="count">31</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 进行中2：写作 -->
+    <div class="flag-card ongoing reveal reveal-delay-1" data-status="ongoing">
+      <div class="flag-card-header">
+        <span class="flag-status-badge badge-ongoing"><i class="fa-solid fa-person-running"></i> 进行中</span>
+        <div class="flag-countdown"><i class="fa-regular fa-clock"></i> 已坚持 423 天</div>
+        <h3>每日写作，不间断 500 天</h3>
+      </div>
+      <div class="flag-time-info">
+        <i class="fa-regular fa-calendar-check"></i>
+        <span>开始于 2024.07.09</span>
+      </div>
+      <div class="flag-progress">
+        <div class="flag-progress-bar">
+          <div class="flag-progress-fill" style="width:84%"></div>
+        </div>
+        <div class="flag-progress-meta">
+          <span>423 / 500 天</span>
+          <span>84%</span>
+        </div>
+      </div>
+      <div class="flag-card-footer">
+        <div class="flag-interact">
+          <button class="flag-btn urge">
+            <i class="fa-solid fa-bolt"></i>
+            催更监督
+            <span class="count">8</span>
+          </button>
+          <button class="flag-btn respect">
+            <i class="fa-solid fa-hand-peace"></i>
+            瑞思拜
+            <span class="count">67</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 已达成：网站上线 -->
+    <div class="flag-card achieved reveal reveal-delay-2" data-status="achieved">
+      <div class="success-stamp">
+        <span>SUC<br>CESS</span>
+      </div>
+      <div class="flag-card-header">
+        <span class="flag-status-badge badge-achieved"><i class="fa-solid fa-trophy"></i> 已达成</span>
+        <h3>发布 Jo Hours 个人网站</h3>
+      </div>
+      <div class="flag-time-info">
+        <i class="fa-solid fa-check-circle" style="color:#81C784"></i>
+        <span>达成于 2026.05.28</span>
+      </div>
+      <div class="flag-review">
+        "终于上线了。从第一行代码到现在，历时两个月。感谢所有催更过我的朋友，你们是真的有用！"
+      </div>
+      <div class="flag-card-footer">
+        <div class="flag-interact">
+          <button class="flag-btn respect">
+            <i class="fa-solid fa-hand-peace"></i>
+            瑞思拜
+            <span class="count">112</span>
+          </button>
+        </div>
+        <span style="font-size:12px;color:rgba(100,200,100,0.6);font-family:'Space Mono',monospace">DONE ✓</span>
+      </div>
+    </div>
+
+    <!-- 进行中3：运动 -->
+    <div class="flag-card ongoing reveal" data-status="ongoing">
+      <div class="flag-card-header">
+        <span class="flag-status-badge badge-ongoing"><i class="fa-solid fa-person-running"></i> 进行中</span>
+        <div class="flag-countdown"><i class="fa-regular fa-clock"></i> 还有 55 天</div>
+        <h3>坚持跑步 90 天不断签</h3>
+      </div>
+      <div class="flag-time-info">
+        <i class="fa-regular fa-calendar-check"></i>
+        <span>开始于 2026.04.08 · 截止 2026.07.06</span>
+      </div>
+      <div class="flag-progress">
+        <div class="flag-progress-bar">
+          <div class="flag-progress-fill" style="width:39%"></div>
+        </div>
+        <div class="flag-progress-meta">
+          <span>35 / 90 天</span>
+          <span>39%</span>
+        </div>
+      </div>
+      <div class="flag-card-footer">
+        <div class="flag-interact">
+          <button class="flag-btn urge">
+            <i class="fa-solid fa-bolt"></i>
+            催更监督
+            <span class="count">22</span>
+          </button>
+          <button class="flag-btn respect">
+            <i class="fa-solid fa-hand-peace"></i>
+            瑞思拜
+            <span class="count">40</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 已达成：考研 -->
+    <div class="flag-card achieved reveal reveal-delay-1" data-status="achieved">
+      <div class="success-stamp">
+        <span>SUC<br>CESS</span>
+      </div>
+      <div class="flag-card-header">
+        <span class="flag-status-badge badge-achieved"><i class="fa-solid fa-trophy"></i> 已达成</span>
+        <h3>跨专业考研上岸</h3>
+      </div>
+      <div class="flag-time-info">
+        <i class="fa-solid fa-check-circle" style="color:#81C784"></i>
+        <span>达成于 2023.03.15</span>
+      </div>
+      <div class="flag-review">
+        "那一年是我人生最苦最值得的一年。现在看这个flag，还是会有点眼眶发酸。"
+      </div>
+      <div class="flag-card-footer">
+        <div class="flag-interact">
+          <button class="flag-btn respect">
+            <i class="fa-solid fa-hand-peace"></i>
+            瑞思拜
+            <span class="count">89</span>
+          </button>
+        </div>
+        <span style="font-size:12px;color:rgba(100,200,100,0.6);font-family:'Space Mono',monospace">DONE ✓</span>
+      </div>
+    </div>
+
+    <!-- 已搁置 -->
+    <div class="flag-card paused reveal reveal-delay-2" data-status="paused">
+      <div class="paused-stamp">PAUSED 💤</div>
+      <div class="flag-card-header">
+        <span class="flag-status-badge badge-paused"><i class="fa-solid fa-moon"></i> 已搁置</span>
+        <h3>学会弹钢琴（基础曲目）</h3>
+      </div>
+      <div class="flag-time-info">
+        <i class="fa-regular fa-calendar"></i>
+        <span>搁置于 2026.03.01 · 完成 12%</span>
+      </div>
+      <div class="flag-progress">
+        <div class="flag-progress-bar">
+          <div class="flag-progress-fill" style="width:12%;background:rgba(184,134,255,0.4)"></div>
+        </div>
+        <div class="flag-progress-meta">
+          <span>搁置中，等有空再捡起来</span>
+          <span>12%</span>
+        </div>
+      </div>
+      <div class="flag-card-footer">
+        <div class="flag-interact">
+          <button class="flag-btn urge">
+            <i class="fa-solid fa-bolt"></i>
+            催更
+            <span class="count">35</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── 留言表单区 ── -->
+  <div class="message-section reveal">
+    <h2>留下你的<span class="gradient-text">足迹</span></h2>
+    <p>监督我、鼓励我、或者就聊聊天，都欢迎 <i class="fa-solid fa-heart" style="color:var(--accent-bright)"></i></p>
+
+    <!-- 快捷语 -->
+    <div class="quick-phrases">
+      <button class="quick-phrase" data-phrase="坐等还愿！加油！🕯️">坐等还愿 🕯️</button>
+      <button class="quick-phrase" data-phrase="催更催更！！不许摸鱼！📢">催更催更 📢</button>
+      <button class="quick-phrase" data-phrase="瑞思拜！你太厉害了 🫡">瑞思拜 🫡</button>
+      <button class="quick-phrase" data-phrase="我也想和你一起卷起来！🔥">一起卷！🔥</button>
+    </div>
+
+    <!-- 表单 -->
+    <form id="message-form">
+      <div class="msg-form">
+        <div class="form-group">
+          <label>昵称 <span>*</span></label>
+          <input class="form-control" type="text" id="message-nickname" placeholder="叫你什么好？" required>
+        </div>
+        <div class="form-group">
+          <label>联系方式（可选）</label>
+          <input class="form-control" type="text" id="message-contact" placeholder="微信 / 邮箱 / 微博">
+        </div>
+        <div class="form-group full">
+          <label>留言内容 <span>*</span></label>
+          <textarea class="form-control" id="message-content" placeholder="写点什么吧，监督、鼓励、吐槽都可以～" required></textarea>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-paper-plane"></i>
+          留下足迹
+        </button>
+        <p class="form-hint">你的留言可能需要审核后显示，站主会亲自翻牌子的！</p>
+      </div>
+    </form>
+
+    <!-- 成功提示 -->
+    <div class="form-success reveal">
+      <i class="fa-solid fa-circle-check" style="margin-right:8px"></i>
+      你的留言正在排队等站主翻牌子，审核后就会公开哦！感谢你的监督 ～
+    </div>
+
+    <!-- 转化引导 -->
+    <div class="form-upsell reveal">
+      <p><strong style="color:var(--text-light)">监督加码成功！</strong>你也是自律狠人吗？去首页看看站主的干货文章，一起卷起来！</p>
+      <div class="upsell-actions">
+        <a href="index.html" class="btn btn-outline" style="padding:10px 20px;font-size:14px">
+          <i class="fa-solid fa-house"></i>
+          去看干货文章
+        </a>
+        <button class="btn btn-ghost" style="padding:10px 20px;font-size:14px" onclick="navigator.clipboard.writeText(window.location.href).then(()=>{this.textContent='链接已复制！'})">
+          <i class="fa-solid fa-share-nodes"></i>
+          分享这个 Flag 墙
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="logo"><i class="fa-solid fa-hourglass-half" style="color:var(--accent-bright);margin-right:8px"></i>Jo Hours</div>
+      <p>个人成长与创意表达的数字空间，记录碎片思考、重要时刻与灵感瞬间。</p>
+    </div>
+    <div class="footer-col">
+      <h4>页面</h4>
+      <a href="index.html">首页</a>
+      <a href="fragments.html">碎片</a>
+      <a href="simon.html">Simon 空间</a>
+      <a href="moments.html">时时刻刻</a>
+    </div>
+    <div class="footer-col">
+      <h4>联系</h4>
+      <a href="mailto:hello@johours.com">邮件联系</a>
+      <a href="#">微信</a><a href="#">GitHub</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Jo Hours · 用心记录每一刻</p>
+    <div class="footer-social">
+      <a href="#"><i class="fa-brands fa-weibo"></i></a>
+      <a href="#"><i class="fa-brands fa-github"></i></a>
+      <a href="#"><i class="fa-solid fa-envelope"></i></a>
+    </div>
+  </div>
+</footer>
+
+<script src="main.js"></script>
+<script>
+  // Flag 筛选
+  document.querySelectorAll('.flag-filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.flag-filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+
+      const filter = this.getAttribute('data-filter');
+      document.querySelectorAll('.flag-card').forEach(card => {
+        if (filter === 'all' || card.getAttribute('data-status') === filter) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  });
+
+  // Flag 互动按钮
+  document.querySelectorAll('.flag-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const countEl = this.querySelector('.count');
+      if (countEl) {
+        let n = parseInt(countEl.textContent) || 0;
+        countEl.textContent = n + 1;
+        this.classList.add('bumped');
+        setTimeout(() => this.classList.remove('bumped'), 400);
+      }
+    });
+  });
+</script>
+</body>
+</html>
