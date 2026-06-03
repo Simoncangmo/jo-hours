@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="作文展示 - Jo Hours · 我的文字作品集">
+  <title>作文展示 · Jo Hours</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* ── 筛选栏 ── */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+
+    .filter-btn {
+      padding: 8px 20px;
+      border-radius: 40px;
+      border: 1px solid var(--card-border);
+      background: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'Noto Sans SC', sans-serif;
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .filter-btn:hover {
+      border-color: var(--accent-bright);
+      color: var(--text-light);
+    }
+
+    .filter-btn.active {
+      background: linear-gradient(135deg, var(--accent-bright), var(--accent-soft));
+      color: var(--bg-deep);
+      border-color: transparent;
+      font-weight: 700;
+    }
+
+    /* ── 作文列表 ── */
+    .essay-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .essay-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 28px 32px;
+      cursor: pointer;
+      transition: all var(--duration-mid) var(--ease-out);
+      text-decoration: none;
+      display: block;
+    }
+
+    .essay-card:hover {
+      border-color: var(--card-hover-border);
+      box-shadow: 0 8px 32px rgba(184,134,255,0.12);
+      transform: translateY(-2px);
+      background: rgba(74,44,122,0.4);
+    }
+
+    .essay-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+      gap: 16px;
+    }
+
+    .essay-card-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-light);
+      line-height: 1.4;
+    }
+
+    .essay-card-date {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--accent-bright);
+      background: rgba(184,134,255,0.1);
+      padding: 4px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .essay-card-excerpt {
+      font-size: 15px;
+      color: var(--text-muted);
+      line-height: 1.8;
+      margin-bottom: 16px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .essay-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .essay-card-tags {
+      display: flex;
+      gap: 6px;
+    }
+
+    .essay-card-read {
+      font-size: 13px;
+      color: var(--accent-bright);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: gap var(--duration-fast) var(--ease-out);
+    }
+
+    .essay-card:hover .essay-card-read {
+      gap: 10px;
+    }
+
+    /* ── 作文详情弹窗 ── */
+    .essay-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,5,24,0.85);
+      backdrop-filter: blur(12px);
+      z-index: 2000;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 60px 24px;
+      overflow-y: auto;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--duration-mid) var(--ease-out);
+    }
+
+    .essay-modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .essay-modal {
+      background: linear-gradient(180deg, #1A0A2E, #0F0518);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-xl);
+      width: 100%;
+      max-width: 800px;
+      padding: 48px;
+      position: relative;
+      transform: translateY(30px);
+      transition: transform var(--duration-mid) var(--ease-out);
+    }
+
+    .essay-modal-overlay.open .essay-modal {
+      transform: translateY(0);
+    }
+
+    .essay-modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--card-border);
+      background: rgba(45,27,78,0.5);
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .essay-modal-close:hover {
+      border-color: var(--accent-bright);
+      color: var(--text-light);
+    }
+
+    .essay-modal-meta {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .essay-modal-date {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: var(--accent-bright);
+    }
+
+    .essay-modal-title {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--text-light);
+      line-height: 1.3;
+      margin-bottom: 24px;
+    }
+
+    .essay-modal-body {
+      font-size: 16px;
+      color: var(--text-muted);
+      line-height: 2;
+    }
+
+    .essay-modal-body p {
+      margin-bottom: 20px;
+    }
+
+    /* ── 添加作文按钮 ── */
+    .add-essay-fab {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-bright), var(--accent-soft));
+      color: var(--bg-deep);
+      font-size: 24px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 8px 32px rgba(184,134,255,0.4);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform var(--duration-fast) var(--ease-spring),
+                  box-shadow var(--duration-fast) var(--ease-out);
+    }
+
+    .add-essay-fab:hover {
+      transform: scale(1.1);
+      box-shadow: 0 12px 40px rgba(184,134,255,0.6);
+    }
+
+    /* ── 添加作文表单弹窗 ── */
+    .add-essay-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,5,24,0.9);
+      backdrop-filter: blur(16px);
+      z-index: 3000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--duration-mid) var(--ease-out);
+    }
+
+    .add-essay-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .add-essay-form {
+      background: linear-gradient(180deg, #1A0A2E, #0F0518);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-xl);
+      width: 100%;
+      max-width: 680px;
+      padding: 40px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .add-essay-form h2 {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text-light);
+      margin-bottom: 28px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(45,27,78,0.6);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      color: var(--text-light);
+      font-size: 15px;
+      font-family: 'Noto Sans SC', sans-serif;
+      transition: border-color var(--duration-fast);
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      border-color: var(--accent-bright);
+    }
+
+    .form-group textarea {
+      min-height: 200px;
+      resize: vertical;
+      line-height: 1.8;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 28px;
+    }
+
+    .form-actions .btn {
+      font-size: 14px;
+      padding: 12px 28px;
+    }
+
+    /* ── 空状态 ── */
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state i {
+      font-size: 64px;
+      color: rgba(184,134,255,0.2);
+      margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+      font-size: 20px;
+      color: var(--text-light);
+      margin-bottom: 12px;
+    }
+
+    .empty-state p {
+      font-size: 15px;
+      margin-bottom: 28px;
+    }
+
+    /* 响应式 */
+    @media (max-width: 767px) {
+      .essay-card {
+        padding: 20px;
+      }
+      .essay-card-title {
+        font-size: 17px;
+      }
+      .essay-modal {
+        padding: 28px 20px;
+      }
+      .essay-modal-title {
+        font-size: 24px;
+      }
+      .add-essay-fab {
+        bottom: 24px;
+        right: 24px;
+        width: 52px;
+        height: 52px;
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <div class="logo-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+    Jo Hours
+  </a>
+  <ul class="nav-menu">
+    <li><a href="fragments.html">碎片</a></li>
+    <li><a href="simon.html">Simon 空间</a></li>
+    <li><a href="moments.html">时时刻刻</a></li>
+    <li><a href="flags.html">Flag 墙</a></li>
+  </ul>
+  <a href="mailto:hello@johours.com" class="nav-contact">联系我</a>
+  <button class="hamburger"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="mobile-menu">
+  <a href="fragments.html"><i class="fa-solid fa-puzzle-piece" style="margin-right:10px;color:var(--accent-bright)"></i>碎片</a>
+  <a href="simon.html"><i class="fa-solid fa-star-of-life" style="margin-right:10px;color:var(--accent-bright)"></i>Simon 空间</a>
+  <a href="moments.html"><i class="fa-solid fa-bolt" style="margin-right:10px;color:var(--accent-bright)"></i>时时刻刻</a>
+  <a href="flags.html"><i class="fa-solid fa-flag" style="margin-right:10px;color:var(--accent-bright)"></i>Flag 墙</a>
+  <a href="mailto:hello@johours.com">联系我 →</a>
+</div>
+
+<!-- Banner -->
+<div class="page-banner page-top">
+  <div class="page-banner-inner">
+    <div class="tag reveal" style="margin-bottom:20px;">
+      <i class="fa-solid fa-pen-nib" style="margin-right:6px"></i>作文展示
+    </div>
+    <h1 class="reveal">我的<span>文字作品</span></h1>
+    <p class="reveal reveal-delay-1">记录思考，表达观点，分享成长的文字</p>
+  </div>
+</div>
+
+<div class="section">
+  <!-- 筛选栏 -->
+  <div class="filter-bar reveal">
+    <button class="filter-btn active" data-filter="all">全部</button>
+    <button class="filter-btn" data-filter="议论文">议论文</button>
+    <button class="filter-btn" data-filter="记叙文">记叙文</button>
+    <button class="filter-btn" data-filter="散文">散文</button>
+    <button class="filter-btn" data-filter="读后感">读后感</button>
+  </div>
+
+  <!-- 作文列表 -->
+  <div class="essay-list" id="essayList">
+
+    <!-- 作文 1 -->
+    <div class="essay-card reveal" data-type="议论文" onclick="openEssay(0)">
+      <div class="essay-card-header">
+        <h3 class="essay-card-title">论坚持的力量</h3>
+        <span class="essay-card-date">2026.05.20</span>
+      </div>
+      <p class="essay-card-excerpt">坚持，是通往成功最朴素也最艰难的路径。它不是一蹴而就的激情，而是日复一日的微小积累……</p>
+      <div class="essay-card-footer">
+        <div class="essay-card-tags">
+          <span class="tag">议论文</span>
+          <span class="tag">成长</span>
+        </div>
+        <span class="essay-card-read">阅读全文 <i class="fa-solid fa-arrow-right"></i></span>
+      </div>
+    </div>
+
+    <!-- 作文 2 -->
+    <div class="essay-card reveal reveal-delay-1" data-type="记叙文" onclick="openEssay(1)">
+      <div class="essay-card-header">
+        <h3 class="essay-card-title">那个改变我的夏天</h3>
+        <span class="essay-card-date">2026.04.15</span>
+      </div>
+      <p class="essay-card-excerpt">那年夏天，我做了一个至今看来都很重要的决定。离开舒适圈，去一个完全陌生的城市……</p>
+      <div class="essay-card-footer">
+        <div class="essay-card-tags">
+          <span class="tag">记叙文</span>
+          <span class="tag">人生</span>
+        </div>
+        <span class="essay-card-read">阅读全文 <i class="fa-solid fa-arrow-right"></i></span>
+      </div>
+    </div>
+
+    <!-- 作文 3 -->
+    <div class="essay-card reveal reveal-delay-2" data-type="散文" onclick="openEssay(2)">
+      <div class="essay-card-header">
+        <h3 class="essay-card-title">雨中的小确幸</h3>
+        <span class="essay-card-date">2026.03.22</span>
+      </div>
+      <p class="essay-card-excerpt">喜欢下雨天，是从很小的时候开始的。窗外的雨声像一种温柔的白噪音，让人不自觉地放松下来……</p>
+      <div class="essay-card-footer">
+        <div class="essay-card-tags">
+          <span class="tag">散文</span>
+          <span class="tag">生活</span>
+        </div>
+        <span class="essay-card-read">阅读全文 <i class="fa-solid fa-arrow-right"></i></span>
+      </div>
+    </div>
+
+    <!-- 作文 4 -->
+    <div class="essay-card reveal" data-type="读后感" onclick="openEssay(3)">
+      <div class="essay-card-header">
+        <h3 class="essay-card-title">读《活着》有感</h3>
+        <span class="essay-card-date">2026.02.08</span>
+      </div>
+      <p class="essay-card-excerpt">合上书页的那一刻，心里有一种说不出的沉重。福贵的一生，是中国近代史的一个缩影……</p>
+      <div class="essay-card-footer">
+        <div class="essay-card-tags">
+          <span class="tag">读后感</span>
+          <span class="tag">书籍</span>
+        </div>
+        <span class="essay-card-read">阅读全文 <i class="fa-solid fa-arrow-right"></i></span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 作文详情弹窗 -->
+<div class="essay-modal-overlay" id="essayModal">
+  <div class="essay-modal">
+    <button class="essay-modal-close" onclick="closeEssay()"><i class="fa-solid fa-xmark"></i></button>
+    <div class="essay-modal-meta">
+      <span class="essay-modal-date" id="essayDate"></span>
+      <span class="tag" id="essayTag"></span>
+    </div>
+    <h2 class="essay-modal-title" id="essayTitle"></h2>
+    <div class="essay-modal-body" id="essayBody"></div>
+  </div>
+</div>
+
+<!-- 添加作文表单弹窗 -->
+<div class="add-essay-overlay" id="addEssayOverlay">
+  <div class="add-essay-form">
+    <h2>✍️ 添加新作文</h2>
+    <div class="form-group">
+      <label>作文标题 *</label>
+      <input type="text" id="essayTitleInput" placeholder="例如：论坚持的力量">
+    </div>
+    <div class="form-group">
+      <label>作文类型 *</label>
+      <select id="essayTypeInput">
+        <option value="议论文">议论文</option>
+        <option value="记叙文">记叙文</option>
+        <option value="散文">散文</option>
+        <option value="读后感">读后感</option>
+        <option value="其他">其他</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>标签（用逗号分隔）</label>
+      <input type="text" id="essayTagsInput" placeholder="例如：成长,人生,思考">
+    </div>
+    <div class="form-group">
+      <label>作文正文 *</label>
+      <textarea id="essayContentInput" placeholder="在这里写下你的作文内容……"></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeAddEssay()">取消</button>
+      <button class="btn btn-primary" onclick="submitEssay()"><i class="fa-solid fa-check"></i> 发布作文</button>
+    </div>
+  </div>
+</div>
+
+<!-- 悬浮添加按钮 -->
+<button class="add-essay-fab" onclick="openAddEssay()" title="添加新作文">
+  <i class="fa-solid fa-plus"></i>
+</button>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="logo"><i class="fa-solid fa-hourglass-half" style="color:var(--accent-bright);margin-right:8px"></i>Jo Hours</div>
+      <p>个人成长与创意表达的数字空间，记录碎片思考、重要时刻与灵感瞬间。</p>
+    </div>
+    <div class="footer-col">
+      <h4>页面</h4>
+      <a href="index.html">首页</a>
+      <a href="fragments.html">碎片</a>
+      <a href="simon.html">Simon 空间</a>
+      <a href="moments.html">时时刻刻</a>
+      <a href="flags.html">Flag 墙</a>
+    </div>
+    <div class="footer-col">
+      <h4>联系</h4>
+      <a href="mailto:hello@johours.com">邮件联系</a>
+      <a href="#">微信</a><a href="#">GitHub</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Jo Hours · 用心记录每一刻</p>
+    <div class="footer-social">
+      <a href="#"><i class="fa-brands fa-weibo"></i></a>
+      <a href="#"><i class="fa-brands fa-github"></i></a>
+      <a href="#"><i class="fa-solid fa-envelope"></i></a>
+    </div>
+  </div>
+</footer>
+
+<script src="main.js"></script>
+<script>
+  // ── 作文数据 ──
+  const essays = [
+    {
+      title: '论坚持的力量',
+      date: '2026.05.20',
+      type: '议论文',
+      tags: ['议论文', '成长'],
+      body: `<p>坚持，是通往成功最朴素也最艰难的路径。它不是一蹴而就的激情，而是日复一日的微小积累。</p>
+             <p>我曾以为，坚持需要强大的意志力。后来才明白，真正的坚持不是靠意志力硬撑，而是把行动变成习惯，让习惯成为自然。</p>
+             <p>每天写500字，每天读30页书，每天运动20分钟——这些看似微不足道的小事，在时间的加持下，会产生令人惊叹的复利效应。</p>
+             <p>坚持最难的地方，不在于开始，而在于中间那段"看不到结果"的灰暗期。这时候，你需要相信过程，相信时间的力量。</p>
+             <p>坚持，不是和自己较劲，而是和时间为友。</p>`
+    },
+    {
+      title: '那个改变我的夏天',
+      date: '2026.04.15',
+      type: '记叙文',
+      tags: ['记叙文', '人生'],
+      body: `<p>那年夏天，我做了一个至今看来都很重要的决定。离开舒适圈，去一个完全陌生的城市。</p>
+             <p>出发前的晚上，我收拾行李到凌晨两点。不是因为东西多，而是心里有太多不确定。我知道，这一走，很多东西都会不一样了。</p>
+             <p>到了新城市的第一周，是最难熬的。没有朋友，没有熟悉的食物，甚至连说话的口音都让我觉得自己是个外人。但也是那一周，我第一次感受到了"独立"的真正含义。</p>
+             <p>那个夏天教会我的，不是某个具体的技能，而是一种心态——敢于走出舒适圈的心态。从那以后，我再也不怕"陌生"了。</p>`
+    },
+    {
+      title: '雨中的小确幸',
+      date: '2026.03.22',
+      type: '散文',
+      tags: ['散文', '生活'],
+      body: `<p>喜欢下雨天，是从很小的时候开始的。窗外的雨声像一种温柔的白噪音，让人不自觉地放松下来。</p>
+             <p>记得小时候，每逢雨天，妈妈总会煮一锅热腾腾的汤圆。我坐在窗边，一边吃汤圆，一边看雨滴从玻璃上滑落。那种温暖和安宁，至今想起来都觉得美好。</p>
+             <p>现在的我，依然喜欢雨天。不同的是，现在是一个人住，雨天的时候，我会泡一杯热茶，打开落地灯，读一本好书。雨水敲打窗户的声音，反而让屋里显得更加安静。</p>
+             <p>生活里有很多这样的"小确幸"——不需要大张旗鼓，不需要别人理解，自己知道就好。雨天，就是我的小确幸之一。</p>`
+    },
+    {
+      title: '读《活着》有感',
+      date: '2026.02.08',
+      type: '读后感',
+      tags: ['读后感', '书籍'],
+      body: `<p>合上书页的那一刻，心里有一种说不出的沉重。福贵的一生，是中国近代史的一个缩影，也是无数普通人命运的写照。</p>
+             <p>余华用最朴素的文字，讲述了一个最残酷的故事。福贵从一个阔少爷，到一无所有的老人，中间经历了战争、饥荒、失去亲人……每一次我以为"他总该翻身了吧"，命运又会给他重重一击。</p>
+             <p>但最让我震撼的，不是福贵遭受了多少苦难，而是他在苦难中依然活着的韧性。到了最后，他只剩下一头老牛，却依然每天下地干活，依然在傍晚时分和老牛说话。</p>
+             <p>"活着"本身，就是一种意义。不需要宏大的理由，不需要别人来证明。活着，就很好。</p>`
+    }
+  ];
+
+  // ── 筛选功能 ──
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filter = btn.dataset.filter;
+      document.querySelectorAll('.essay-card').forEach(card => {
+        if (filter === 'all' || card.dataset.type === filter) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  });
+
+  // ── 打开作文详情 ──
+  function openEssay(index) {
+    const essay = essays[index];
+    document.getElementById('essayDate').textContent = essay.date;
+    document.getElementById('essayTag').textContent = essay.type;
+    document.getElementById('essayTitle').textContent = essay.title;
+    document.getElementById('essayBody').innerHTML = essay.body;
+    document.getElementById('essayModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeEssay() {
+    document.getElementById('essayModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // ── 添加作文 ──
+  function openAddEssay() {
+    document.getElementById('addEssayOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeAddEssay() {
+    document.getElementById('addEssayOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function submitEssay() {
+    const title = document.getElementById('essayTitleInput').value.trim();
+    const type = document.getElementById('essayTypeInput').value;
+    const tags = document.getElementById('essayTagsInput').value.trim();
+    const content = document.getElementById('essayContentInput').value.trim();
+
+    if (!title || !content) {
+      alert('请填写标题和正文内容');
+      return;
+    }
+
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')}`;
+    const tagArr = tags ? tags.split(/[,，]/).map(t => t.trim()).filter(Boolean) : [type];
+
+    // 添加到数据
+    essays.unshift({
+      title,
+      date: dateStr,
+      type,
+      tags: tagArr,
+      body: `<p>${content.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`
+    });
+
+    // 添加到 DOM
+    const list = document.getElementById('essayList');
+    const card = document.createElement('div');
+    card.className = 'essay-card reveal';
+    card.style.opacity = '1';
+    card.style.transform = 'none';
+    card.dataset.type = type;
+    card.onclick = () => openEssay(0);
+    card.innerHTML = `
+      <div class="essay-card-header">
+        <h3 class="essay-card-title">${title}</h3>
+        <span class="essay-card-date">${dateStr}</span>
+      </div>
+      <p class="essay-card-excerpt">${content.substring(0, 80)}……</p>
+      <div class="essay-card-footer">
+        <div class="essay-card-tags">
+          ${tagArr.map(t => `<span class="tag">${t}</span>`).join('')}
+        </div>
+        <span class="essay-card-read">阅读全文 <i class="fa-solid fa-arrow-right"></i></span>
+      </div>
+    `;
+    list.insertBefore(card, list.firstChild);
+
+    // 重置表单
+    document.getElementById('essayTitleInput').value = '';
+    document.getElementById('essayTagsInput').value = '';
+    document.getElementById('essayContentInput').value = '';
+    closeAddEssay();
+
+    // 提示
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#B886FF,#DDA0DD);color:#0F0518;padding:12px 28px;border-radius:40px;font-size:14px;font-weight:700;z-index:9999;box-shadow:0 8px 32px rgba(184,134,255,0.4);';
+    toast.textContent = '✅ 作文发布成功！';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2500);
+  }
+
+  // ESC 关闭弹窗
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      closeEssay();
+      closeAddEssay();
+    }
+  });
+</script>
+</body>
+</html>
